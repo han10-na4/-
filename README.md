@@ -109,3 +109,123 @@ except Exception as e:
 - 모듈화된 코드 구조
 
 이 프로그램은 OpenCV를 기반으로 한 이미지 처리 라이브러리로, 사용자가 쉽게 다양한 예술적 효과를 이미지에 적용할 수 있도록 설계되었습니다.
+
+# Animation Filter 프로그램 분석
+
+## 1. 클래스 구조
+### `AnimationStylizer` 클래스
+```python
+class AnimationStylizer:
+    def __init__(self):
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.styles = {
+            '1': '디즈니 스타일',
+            '2': '픽사 스타일',
+            '3': '지브리 스타일'
+        }
+```
+
+## 2. 주요 컴포넌트
+
+### 2.1 AI 모델 초기화
+- **Stable Diffusion 모델**
+  ```python
+  self.ghibli_pipe = StableDiffusionImg2ImgPipeline.from_pretrained()
+  self.disney_pipe = StableDiffusionImg2ImgPipeline.from_pretrained()
+  ```
+- **얼굴 감지 모델**
+  ```python
+  self.face_detector = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+  ```
+
+### 2.2 스타일별 프롬프트
+1. **디즈니/픽사 스타일**
+   - 현대적 3D 애니메이션 특징
+   - 자연스러운 인체 비율
+   - 세밀한 텍스처와 조명
+
+2. **지브리 스타일**
+   - 전통적 2D 애니메이션
+   - 부드러운 선과 색감
+   - 자연스러운 움직임 표현
+
+## 3. 이미지 처리 파이프라인
+
+### 3.1 전처리 (`preprocess_image`)
+```python
+# 이미지 크기 조정
+image = cv2.resize(image, (768, 768))
+
+# 노이즈 제거
+image = cv2.fastNlMeansDenoisingColored(image)
+
+# 선명도 향상
+kernel = np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]]) * 0.4
+```
+
+### 3.2 스타일 변환 파라미터
+```python
+# 디즈니/픽사 스타일
+strength=0.78        # 사람다운 특징 강화
+guidance_scale=8.0   # 선명한 디테일
+num_inference_steps=40  # 렌더링 품질
+```
+
+### 3.3 후처리 (`post_process_image`)
+- 밝기와 대비 조정
+- 선명도 미세 조정
+- 채도 및 색상 보정
+
+## 4. 주요 기능
+
+### 4.1 자동 스타일 분석
+```python
+def analyze_image(self, image_path):
+    # 얼굴 감지
+    faces = self.detect_faces(image)
+    # 이미지 특성 분석
+    # 최적 스타일 추천
+```
+
+### 4.2 스타일 적용
+- 각 스타일별 최적화된 파라미터
+- 네거티브 프롬프트를 통한 품질 제어
+- 스타일별 특성 강화
+
+## 5. 성능 최적화
+
+### 5.1 하드웨어 최적화
+```python
+torch_dtype = torch.float16 if self.device == "cuda" else torch.float32
+```
+
+### 5.2 메모리 관리
+```python
+"low_cpu_mem_usage": True
+"safety_checker": None
+```
+
+## 6. 사용자 인터페이스
+
+### 6.1 스타일 선택
+1. 수동 선택
+2. 자동 분석 기반 추천
+
+### 6.2 파일 처리
+- 다양한 이미지 포맷 지원
+- 자동 저장 경로 관리
+- 한글 경로 지원
+
+## 7. 에러 처리
+- 파일 경로 검증
+- 모델 로딩 실패 대응
+- 이미지 처리 오류 관리
+
+## 8. 주요 특징
+- GPU 가속 지원
+- 얼굴 인식 기반 최적화
+- 고품질 이미지 생성
+- 자동 스타일 추천 시스템
+
+이 프로그램은 Stable Diffusion을 기반으로 한 고급 이미지 스타일 변환 시스템으로, AI 모델을 활용하여 사용자의 이미지를 다양한 애니메이션 스타일로 변환할 수 있습니다.
+
